@@ -12,6 +12,12 @@
 #include "string.h"
 
 
+#define GPIO_SENSOR_1 GPIO27  // Botón en GPIO 0 (normalmente el botón BOOT en ESP32)
+#define GPIO_SENSOR_2 GPIO5   // Botón en GPIO 0 (normalmente el botón BOOT en ESP32)
+#define GPIO_SENSOR_3 GPIO17   // Botón en GPIO 0 (normalmente el botón BOOT en ESP32)
+#define DEBOUNCE_TIME_MS 250  // Tiempo de debounce en milisegundos
+
+
 enum LEDS{
     LED1=17, LED2=16, LED3=4, LED4=2,
     LED5=14, LED6=12, LED7=13, LED8=5,
