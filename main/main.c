@@ -18,7 +18,6 @@ int value_adc=0;
 int value_adc_2=0;
 int value_adc_3=0;
 int bandera_control =0;
-int last_interrupt_time = 0; // Tiempo de la última interrupción
 int count_btn=0;
 
 bool sistema_on =false;
@@ -37,10 +36,7 @@ void app_main(void)
 
     adc_init();
     uart_init();
-    init_isr();
     gpio_init();
-    
-
     
     while(1){
 
@@ -87,9 +83,6 @@ void app_main(void)
             }
         }
 
-        
-        
-
         vTaskDelay(100/ portTICK_PERIOD_MS);
     }
 
@@ -135,8 +128,6 @@ void uart_task(void *params) {
             hal_terminal_send(state);
 
         }
-        
-
         
         vTaskDelay(100 / portTICK_PERIOD_MS); // Espera 100ms
     }
@@ -254,17 +245,3 @@ void adc_3_task(void *params){
     }
 }
 
-void IRAM_ATTR gpio_isr_handler(void* arg) {
-
-    // Control de debounce
-    int current_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
-    if ((current_time - last_interrupt_time) < DEBOUNCE_TIME_MS) {
-        return;  // Ignorar si ocurre dentro del tiempo de debounce
-    }
-    last_interrupt_time = current_time;  // Actualizar el tiempo de la última interrupción
-
-    // Cada vez que se presiona el botón (flanco descendente), se invoca esta función
-    int pin = (int) arg;
-    
-    
-}
