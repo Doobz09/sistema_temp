@@ -19,6 +19,9 @@ int value_adc_2=0;
 int value_adc_3=0;
 int bandera_control =0;
 int last_interrupt_time = 0; // Tiempo de la última interrupción
+int count_btn=0;
+
+bool sistema_on =false;
 
 
 void adc_task(void* pvParameters);
@@ -36,18 +39,55 @@ void app_main(void)
     uart_init();
     init_isr();
     gpio_init();
-    xTaskCreate(uart_task, "uart Task", 2048, NULL, 5, &uart_task_handle);
-    xTaskCreate(activar_desactivar_task, "activar_desactivar_task", 2048, NULL, 5, &activar_desactivar_task_handle );
+    
 
     
     while(1){
-        if(hal_btn_read(BTN1)==0){
-            hal_led_set_level(LED4,0);
-        }
-        else{
-            hal_led_set_level(LED4,1);
 
+        if(hal_btn_read(BTN1)==0){
+            while(hal_btn_read(BTN1)==0);
+            count_btn++;
+            if((count_btn & 1)==1){
+                hal_led_set_level(LED4,1);
+                sistema_on = true;
+                xTaskCreate(uart_task, "uart Task", 2048, NULL, 5, &uart_task_handle);
+                xTaskCreate(activar_desactivar_task, "activar_desactivar_task", 2048, NULL, 5, &activar_desactivar_task_handle );
+            }     
+            else{
+                 hal_led_set_level(LED4,0);
+                 
+                 
+                 sistema_on=false;
+                 sprintf(state, "7\n");
+                 hal_terminal_send(state);
+
+                 if(adc_task_handle != NULL){
+                    vTaskDelete(adc_task_handle);
+                    adc_task_handle = NULL; 
+                }
+                if(adc_2_task_handle != NULL){
+                    vTaskDelete(adc_2_task_handle);
+                   adc_2_task_handle = NULL; 
+                }
+                if(adc_3_task_handle != NULL){
+                    vTaskDelete(adc_3_task_handle);
+                   adc_3_task_handle = NULL; 
+                }
+                if(uart_task_handle != NULL){
+                    vTaskDelete(uart_task_handle);
+                   uart_task_handle = NULL; 
+                }
+
+                if(activar_desactivar_task_handle != NULL){
+                    vTaskDelete(activar_desactivar_task_handle);
+                   activar_desactivar_task_handle = NULL; 
+                }
+                 
+
+            }
         }
+
+        
         
 
         vTaskDelay(100/ portTICK_PERIOD_MS);
@@ -56,7 +96,7 @@ void app_main(void)
 }
 
 void uart_task(void *params) {
-    while (1) {
+    while (sistema_on==true) {
         if (bandera_control==0){
             sprintf(state, "0\n");
              hal_terminal_send(state);
@@ -96,13 +136,15 @@ void uart_task(void *params) {
 
         }
         
+
+        
         vTaskDelay(100 / portTICK_PERIOD_MS); // Espera 100ms
     }
 }
 
 void activar_desactivar_task(void *params){
 
-    while(1){
+    while(sistema_on==true){
 
          //SENSOR 1-----------------------
         if(gpio_get_level(GPIO_SENSOR_1)==ACTIVO){
