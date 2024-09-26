@@ -15,7 +15,7 @@
 #define GPIO_SENSOR_1 GPIO27  // Botón en GPIO 0 (normalmente el botón BOOT en ESP32)
 #define GPIO_SENSOR_2 GPIO5   // Botón en GPIO 0 (normalmente el botón BOOT en ESP32)
 #define GPIO_SENSOR_3 GPIO17   // Botón en GPIO 0 (normalmente el botón BOOT en ESP32)
-#define DEBOUNCE_TIME_MS 250  // Tiempo de debounce en milisegundos
+#define DEBOUNCE_TIME_MS 200  // Tiempo de debounce en milisegundos
 
 
 enum LEDS{

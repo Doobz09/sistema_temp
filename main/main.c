@@ -5,11 +5,14 @@
 #include "../bsp/bsp.h"
 char state[100];
 
+#define ACTIVO 0
+#define DESACTIVO 1
+
 TaskHandle_t adc_task_handle = NULL;
 TaskHandle_t adc_2_task_handle = NULL;
 TaskHandle_t adc_3_task_handle = NULL;
 TaskHandle_t uart_task_handle = NULL;
-TaskHandle_t bandera_task_handle = NULL;
+TaskHandle_t activar_desactivar_task_handle = NULL;
 
 int value_adc=0;
 int value_adc_2=0;
@@ -22,10 +25,8 @@ void adc_task(void* pvParameters);
 void adc_2_task(void* pvParameters);
 void adc_3_task(void* pvParameters);
 void uart_task(void* pvParameters);
-void bandera_task(void* pvParameters);
+void activar_desactivar_task(void* pvParameters);
 
-void IRAM_ATTR gpio_isr_handler(void* arg);
-void init_isr();
 
 
 void app_main(void)
@@ -34,41 +35,23 @@ void app_main(void)
     adc_init();
     uart_init();
     init_isr();
+    gpio_init();
     xTaskCreate(uart_task, "uart Task", 2048, NULL, 5, &uart_task_handle);
-    xTaskCreate(bandera_task, "bandera Task", 2048, NULL, 5, &bandera_task_handle);
+    xTaskCreate(activar_desactivar_task, "activar_desactivar_task", 2048, NULL, 5, &activar_desactivar_task_handle );
 
     
     while(1){
-        vTaskDelay(500/ portTICK_PERIOD_MS);
+        if(hal_btn_read(BTN1)==0){
+            hal_led_set_level(LED4,0);
+        }
+        else{
+            hal_led_set_level(LED4,1);
+
+        }
+        
+
+        vTaskDelay(100/ portTICK_PERIOD_MS);
     }
-
-}
-
-void init_isr(){
-    gpio_config_t pGPIOconfig;
-    pGPIOconfig.pin_bit_mask = (1ULL <<GPIO_SENSOR_1);
-    pGPIOconfig.mode = GPIO_MODE_DEF_INPUT;
-    pGPIOconfig.pull_up_en = GPIO_PULLUP_ENABLE;
-    pGPIOconfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    pGPIOconfig.intr_type=GPIO_INTR_ANYEDGE;
-
-    gpio_config(&pGPIOconfig);
-
-    // Configurar GPIO_SENSOR_2 para generar otra interrupción
-    pGPIOconfig.pin_bit_mask = (1ULL << GPIO_SENSOR_2);
-    gpio_config(&pGPIOconfig);  // Reusar la estructura para el segundo pin
-
-    // Configurar GPIO_SENSOR_3 para generar otra interrupción
-    pGPIOconfig.pin_bit_mask = (1ULL << GPIO_SENSOR_3);
-    gpio_config(&pGPIOconfig);  // Reusar la estructura para el segundo pin
-
-
-     // Instalar el servicio de interrupciones de GPIO
-    gpio_install_isr_service(0);
-    // Agregar handler para la interrupción en el pin de entrada
-    gpio_isr_handler_add(GPIO_SENSOR_1, gpio_isr_handler, (void*) GPIO_SENSOR_1);
-    gpio_isr_handler_add(GPIO_SENSOR_2, gpio_isr_handler, (void*) GPIO_SENSOR_2);
-    gpio_isr_handler_add(GPIO_SENSOR_3, gpio_isr_handler, (void*) GPIO_SENSOR_3);
 
 }
 
@@ -117,9 +100,54 @@ void uart_task(void *params) {
     }
 }
 
+void activar_desactivar_task(void *params){
 
-void bandera_task(void *params) {
-    while (1) {
+    while(1){
+
+         //SENSOR 1-----------------------
+        if(gpio_get_level(GPIO_SENSOR_1)==ACTIVO){
+            if (adc_task_handle == NULL) {
+            xTaskCreate(adc_task, "ADC Task", 2048, NULL, 5, &adc_task_handle);
+            vTaskResume(adc_task_handle);
+        }
+        }
+        else if(gpio_get_level(GPIO_SENSOR_1)==DESACTIVO){
+            if(adc_task_handle != NULL){
+                vTaskDelete(adc_task_handle);
+                adc_task_handle = NULL; 
+        }
+        }//---------------------------------------
+        //SENSOR 2-------------------------------
+        if(gpio_get_level(GPIO_SENSOR_2)==ACTIVO){
+            if (adc_2_task_handle == NULL) {
+            xTaskCreate(adc_2_task, "ADC_2 Task", 2048, NULL, 5, &adc_2_task_handle);
+            vTaskResume(adc_2_task_handle);
+        }
+        }
+        else if(gpio_get_level(GPIO_SENSOR_2)==DESACTIVO){
+            if(adc_2_task_handle != NULL){
+                vTaskDelete(adc_2_task_handle);
+                adc_2_task_handle = NULL; 
+        }
+        }
+        //---------------------------------------
+
+        //SENSOR 3-------------------------------
+        if(gpio_get_level(GPIO_SENSOR_3)==ACTIVO){
+            if (adc_3_task_handle == NULL) {
+            xTaskCreate(adc_3_task, "ADC_3 Task", 2048, NULL, 5, &adc_3_task_handle);
+            vTaskResume(adc_3_task_handle);
+        }
+        }
+        else if(gpio_get_level(GPIO_SENSOR_3)==DESACTIVO){
+            if(adc_3_task_handle != NULL){
+                vTaskDelete(adc_3_task_handle);
+                adc_3_task_handle = NULL; 
+        }
+        }
+
+        //---------------------------------------
+
         if(gpio_get_level(GPIO_SENSOR_2)==0 && gpio_get_level(GPIO_SENSOR_1)==0 && gpio_get_level(GPIO_SENSOR_3)==1){
                 bandera_control=212;
             }
@@ -152,19 +180,17 @@ void bandera_task(void *params) {
 
         }
 
-        vTaskDelay(100 / portTICK_PERIOD_MS); 
+        vTaskDelay(100 / portTICK_PERIOD_MS); // Espera 100ms
+
     }
+
 }
 
 
-// Función de la tarea que leerá el ADC
 void adc_task(void *params) {
     while (1) {
         value_adc = hal_read_adc(ADC1_CHANNEL_4);
         value_adc = value_adc/12;
-
-        //sprintf(state, "Valor ADC: %d\n", value_adc);
-        //hal_terminal_send(state);
         vTaskDelay(100 / portTICK_PERIOD_MS); // Espera 100ms
     }
 }
@@ -173,9 +199,6 @@ void adc_2_task(void *params){
     while(1){
         value_adc_2 = hal_read_adc(ADC1_CHANNEL_5);
         value_adc_2 = value_adc_2/12;
-
-        //sprintf(state, "Valor ADC: %d\n", value_adc);
-        //hal_terminal_send(state);
         vTaskDelay(100 / portTICK_PERIOD_MS); // Espera 100ms
 
     }
@@ -184,9 +207,6 @@ void adc_3_task(void *params){
     while(1){
         value_adc_3 = hal_read_adc(ADC1_CHANNEL_6);
         value_adc_3 = value_adc_3/12;
-
-        //sprintf(state, "Valor ADC: %d\n", value_adc);
-        //hal_terminal_send(state);
         vTaskDelay(100 / portTICK_PERIOD_MS); // Espera 100ms
 
     }
@@ -204,43 +224,5 @@ void IRAM_ATTR gpio_isr_handler(void* arg) {
     // Cada vez que se presiona el botón (flanco descendente), se invoca esta función
     int pin = (int) arg;
     
-    if(pin == GPIO_SENSOR_1){
-        // Crear tarea si no existe
-        if (adc_task_handle == NULL) {
-            xTaskCreate(adc_task, "ADC Task", 2048, NULL, 5, &adc_task_handle);
-            vTaskResume(adc_task_handle);
-        }
-        else if(adc_task_handle != NULL){
-            vTaskDelete(adc_task_handle);
-            adc_task_handle = NULL; 
-
-        }
-
-    }
-    if(pin == GPIO_SENSOR_2){
-        // Crear tarea si no existe
-        if (adc_2_task_handle == NULL) {
-            xTaskCreate(adc_2_task, "ADC_2 Task", 2048, NULL, 5, &adc_2_task_handle);
-            vTaskResume(adc_2_task_handle); 
-            
-        }
-        else if(adc_2_task_handle != NULL){
-            vTaskDelete(adc_2_task_handle);
-            adc_2_task_handle = NULL;
-        }
-    }
-
-    if(pin == GPIO_SENSOR_3){
-        // Crear tarea si no existe
-        if (adc_3_task_handle == NULL) {
-            xTaskCreate(adc_3_task, "ADC_3 Task", 2048, NULL, 5, &adc_3_task_handle);
-            vTaskResume(adc_3_task_handle); 
-            
-        }
-        else if(adc_3_task_handle != NULL){
-            vTaskDelete(adc_3_task_handle);
-            adc_3_task_handle = NULL;
-        }
-    }
     
 }
