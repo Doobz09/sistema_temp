@@ -17,6 +17,7 @@
     "idf.flashType": "UART",
     "files.associations": {
         "esp_mac.h": "c",
-        "init_functions.h": "c"
+        "init_functions.h": "c",
+        "string": "c"
     }
 }
