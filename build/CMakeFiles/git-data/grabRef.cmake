@@ -18,7 +18,7 @@ set(HEAD_HASH)
 file(READ "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/build/CMakeFiles/git-data/HEAD" HEAD_CONTENTS LIMIT 1024)
 
 string(STRIP "${HEAD_CONTENTS}" HEAD_CONTENTS)
-set(GIT_DIR "C:/ESP32/esp-idf/.git")
+set(GIT_DIR "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/.git")
 # handle git-worktree
 if(EXISTS "${GIT_DIR}/commondir")
 	file(READ "${GIT_DIR}/commondir" GIT_DIR_NEW LIMIT 1024)

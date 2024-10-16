@@ -1,7 +1,7 @@
 {
     "version":            "1",
     "project_name":       "sistema_temp",
-    "project_version":    "1",
+    "project_version":    "4515b4d-dirty",
     "project_path":       "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp",
     "idf_path":           "C:/ESP32/esp-idf",
     "build_dir":          "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/build",
@@ -790,7 +790,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/build/esp-idf/main/libmain.a",
-            "sources": [ "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/main/main.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/init_functions/init_functions.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/hal/gpio/gpio.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/hal/adc/adc.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/hal/terminal/terminal.c" ],
+            "sources": [ "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/main/main.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/init_functions/init_functions.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/hal/gpio/gpio.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/hal/adc/adc.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/hal/terminal/terminal.c", "C:/Users/mende/Desktop/DSEI/sistema_de_temperatura/sistema_temp/Funciones_knn/Funciones_knn.c" ],
             "include_dirs": [ "." ]
         },
         "mbedtls": {
